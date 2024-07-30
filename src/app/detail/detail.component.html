@@ -1,0 +1,46 @@
+<section id="detail">
+    <div class="container my-5">
+        <div id="header" class="row justify-content-between mb-5" style="height: 8vh;">
+            <div class="col-3 rounded-2 bg-dark text-white border align-items-center d-flex shadow-sm">
+                <h5 class="fw-semibold m-0">{{etfDetail.name}}</h5>
+            </div>
+            <div class="col-9 d-flex justify-content-between h-100 ps-5 pe-0">
+                <div
+                    class="col-1 rounded-2 bg-dark text-white border align-items-center justify-content-center d-flex shadow-sm">
+                    <h5 class="fw-semibold m-0">{{etfDetail.symbol}}</h5>
+                </div>
+                <div
+                    class="col-1 rounded-2 bg-dark  text-white border align-items-center justify-content-center d-flex shadow-sm">
+                    <h5 class="fw-semibold m-0">{{percentage}}%</h5>
+                </div>
+            </div>
+        </div>
+        <div class="row justify-content-between" style="height: 74vh;">
+            <div class="col-3 rounded-2 border justify-content-center d-flex flex-column shadow-sm">
+                <h5 class="fw-semibold m-0">
+                    name: {{etfDetail.name}}<br>
+                    open: {{etfDetail.open}}$<br>
+                    close: {{etfDetail.close}}$<br>
+                </h5>
+                <div class="btn-group mt-3" role="group" aria-label="Basic radio toggle button group">
+                    <input type="radio" class="btn-check" name="btnradio" id="btnradio1" autocomplete="off" checked (click) = "filterData('')">
+                    <label class="btn btn-outline-primary" for="btnradio1">1 Year</label>
+
+                    <input type="radio" class="btn-check" name="btnradio" id="btnradio2" autocomplete="off" (click) = "filterData('6M')">
+                    <label class="btn btn-outline-primary" for="btnradio2">6 Months</label>
+
+                    <input type="radio" class="btn-check" name="btnradio" id="btnradio3" autocomplete="off" (click) = "filterData('3M')">
+                    <label class="btn btn-outline-primary" for="btnradio3">3 Months</label>
+
+                    <input type="radio" class="btn-check" name="btnradio" id="btnradio4" autocomplete="off" (click) = "filterData('1M')">
+                    <label class="btn btn-outline-primary" for="btnradio4">1 Month</label>
+                </div>
+            </div>
+            <div class="col-9 ps-5 pe-0">
+                <div class="border rounded-2 h-100 w-100 shadow-sm">
+                    <canvas id="myChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

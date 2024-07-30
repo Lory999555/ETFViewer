@@ -1,0 +1,10 @@
+{
+  "/api": {
+    "target": "https://api.polygon.io",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    }
+  }
+}
