@@ -1,6 +1,6 @@
 # EtfViewer
 
-top manage your customized etf wallet and analyze the performance of your investments in one click with ETFViewer.
+Top manage your customized etf wallet and analyze the performance of your investments in one click with ETFViewer.
 
 ![Demo](public/clipETF.gif)
 
