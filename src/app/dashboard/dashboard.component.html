@@ -65,8 +65,11 @@
               <li>Close: {{etf.close}}$</li>
               <li></li>
             </ul>
-            <button type="button" class="w-100 btn btn-lg btn-outline-primary" (click)="trend(etf)"
-              routerLink="trend">Trend</button>
+            <!-- Button trigger modal -->
+            <button type="button" class="w-100 btn btn-lg btn-outline-primary" data-bs-toggle="modal"
+              data-bs-target="#exampleModal" (click)="trend(etf)">
+              Trend
+            </button>
           </div>
           <div class="card-footer text-body-secondary">
             last update: {{etf.from}}
@@ -76,3 +79,11 @@
     </div>
   </div>
 </section>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content">
+      <app-detail *ngIf="walletService.getEtfDetail()!=null"></app-detail>
+    </div>
+  </div>
+</div>

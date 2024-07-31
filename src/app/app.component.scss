@@ -1,0 +1,15 @@
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #000; /* Colore di sfondo (puoi cambiarlo) */
+    z-index: 25; /* Assicura che sia sopra tutto il resto */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff; /* Colore del testo o degli elementi all'interno */
+    font-size: 2rem;
+  }
+  

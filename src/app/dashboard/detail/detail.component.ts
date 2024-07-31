@@ -1,5 +1,5 @@
-import { AfterViewInit, Component } from '@angular/core';
-import { WalletService } from '../wallet.service';
+import { AfterViewInit, Component, OnDestroy, OnInit } from '@angular/core';
+import { etf, WalletService } from '../../wallet.service';
 import { Observable } from 'rxjs';
 import {
   Chart,
@@ -10,44 +10,64 @@ import {
   LineElement,
   PointElement,
   TimeScale,
-  Tooltip
+  Tooltip,
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
+import { AsyncPipe } from '@angular/common';
 
-Chart.register(Colors, LineController, LineElement, LinearScale, Legend, PointElement, TimeScale, Tooltip);
+Chart.register(
+  Colors,
+  LineController,
+  LineElement,
+  LinearScale,
+  Legend,
+  PointElement,
+  TimeScale,
+  Tooltip
+);
 
 @Component({
   selector: 'app-detail',
   standalone: true,
+  imports: [AsyncPipe],
   templateUrl: './detail.component.html',
   styleUrls: ['./detail.component.scss'],
 })
-export class DetailComponent implements AfterViewInit {
-  private etfValues$: Observable<any>;
-  public etfDetail: any;
-  public percentage: string;
-  private data: { x: number, y: number }[] = [];
+export class DetailComponent implements OnInit, OnDestroy, AfterViewInit {
+  private etfValues$: Observable<any> | undefined;
+  public etfDetail: etf | null;
+  private data: { x: number; y: number }[] = [];
   private chart: Chart | undefined;
 
-  constructor(private walletService: WalletService) {
+  constructor(public walletService: WalletService) {
+    this.etfDetail = null;
+    console.log('construct');
+  }
+
+  ngOnInit(): void {
+    console.log('init');
     this.etfDetail = this.walletService.getEtfDetail();
-    this.percentage = (
-      ((this.etfDetail.close - this.etfDetail.open) / this.etfDetail.open) *
-      100
-    ).toFixed(3);
-    this.etfValues$ = this.walletService.getETFTickerDetails();
+  }
+
+  ngOnDestroy(): void {
+    console.log('destroy');
   }
 
   ngAfterViewInit(): void {
+    console.log('view');
+    this.etfValues$ = this.walletService.getETFTickerDetails();
     this.etfValues$.subscribe((elements) => {
       elements.forEach((element: any) => {
-        this.data.push({ x: new Date(element.date).getTime(), y: element.value });
+        this.data.push({
+          x: new Date(element.date).getTime(),
+          y: element.value,
+        });
       });
       this.initializeChart(this.data);
     });
   }
 
-  private initializeChart(data: {x:number,y:number}[]) {
+  private initializeChart(data: { x: number; y: number }[]) {
     const ctx = document.getElementById('myChart') as HTMLCanvasElement;
 
     const totalDuration = 2000;
@@ -56,8 +76,8 @@ export class DetailComponent implements AfterViewInit {
       ctx.index === 0
         ? ctx.chart.scales.y.getPixelForValue(100)
         : ctx.chart
-          .getDatasetMeta(ctx.datasetIndex)
-          .data[ctx.index - 1].getProps(['y'], true).y;
+            .getDatasetMeta(ctx.datasetIndex)
+            .data[ctx.index - 1].getProps(['y'], true).y;
     const animation: any = {
       x: {
         type: 'number',
@@ -123,24 +143,24 @@ export class DetailComponent implements AfterViewInit {
     this.chart = new Chart(ctx, config);
   }
 
-  private updateChart(data: { x: number, y: number }[]) {
+  private updateChart(data: { x: number; y: number }[]) {
     this.chart!.data.datasets[0].data = data;
-    this.chart?.update('none');  // Utilizza 'none' per evitare un'animazione ogni volta che si aggiorna
+    this.chart?.update('none'); // Utilizza 'none' per evitare un'animazione ogni volta che si aggiorna
   }
 
   filterData(period: string) {
     const now = new Date();
-    let filteredData: { x: number, y: number }[];
+    let filteredData: { x: number; y: number }[];
 
     switch (period) {
       case '6M':
-        filteredData = this.data.filter(d => d.x >= this.addMonths(now, -6));
+        filteredData = this.data.filter((d) => d.x >= this.addMonths(now, -6));
         break;
       case '3M':
-        filteredData = this.data.filter(d => d.x >= this.addMonths(now, -3));
+        filteredData = this.data.filter((d) => d.x >= this.addMonths(now, -3));
         break;
       case '1M':
-        filteredData = this.data.filter(d => d.x >= this.addMonths(now, -1));
+        filteredData = this.data.filter((d) => d.x >= this.addMonths(now, -1));
         break;
       default:
         filteredData = this.data;
