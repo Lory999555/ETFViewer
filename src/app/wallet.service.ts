@@ -1,12 +1,15 @@
 import { Injectable } from '@angular/core';
 import { DataService } from './data.service';
 import { DateService } from './date.service';
-import { Observable, of, forkJoin, BehaviorSubject } from 'rxjs';
-import { catchError, tap,map } from 'rxjs/operators';
+import { Observable, of, forkJoin, BehaviorSubject, from } from 'rxjs';
+import { catchError, tap, map } from 'rxjs/operators';
 
 export interface etf {
+  symbol: string;
   name: string;
-  ticker: string;
+  open: number;
+  close: number;
+  percentageChange: string;
 }
 
 @Injectable({
@@ -14,14 +17,15 @@ export interface etf {
 })
 export class WalletService {
   private storageKey = 'userWallet'; // Local storage key
-  private cacheLS: etf[] = []; // Mirror of the local storage content for optimization
+  private cacheLS: any[] = []; // Mirror of the local storage content for optimization
   private etfCache$ = new BehaviorSubject<any[]>([]);
-  private etfDetail: any;
+  private etfDetail: etf | null;
 
   constructor(
     private dataService: DataService,
     private dateService: DateService
   ) {
+    this.etfDetail = null;
     this.cacheLS = this.getWallet();
     this.loadSavedEtfsDetails().subscribe(); // Pre-load the ETF details
   }
@@ -29,14 +33,22 @@ export class WalletService {
   getETFTickerDetails(): Observable<any> {
     const fromDate = this.dateService.getYearAgo();
     const toDate = this.dateService.getYesterday();
-    return this.dataService.getTickerDetails(this.etfDetail.symbol, fromDate, toDate);
+    return this.dataService.getTickerDetails(
+      this.etfDetail!.symbol,
+      fromDate,
+      toDate
+    );
   }
 
-  setEtfDetail(etf: any) {
+  setEtfDetail(etf: etf): void {
     this.etfDetail = etf;
   }
 
-  getEtfDetail() {
+  clearEtfDetail():void{
+    this.etfDetail = null;
+  }
+
+  getEtfDetail(): etf | null{
     return this.etfDetail;
   }
 
@@ -48,72 +60,78 @@ export class WalletService {
     }
   }
 
-  addEtfToWallet(name: string, ticker: string): Observable<any> {
-    if (this.cacheLS.some((etf) => etf.ticker === ticker)) {
+  addEtfToWallet(name: string, symbol: string): Observable<any> {
+    if (this.cacheLS.some((etf) => etf.symbol === symbol)) {
       console.log('ETF already in the wallet');
       return of(null);
     }
 
-    const etf: etf = { name, ticker };
+    const etf: any = { name, symbol };
     this.addToWallet(etf);
 
-    return this.dataService.getOpenClose(ticker, this.dateService.getYesterday()).pipe(
-      map((data) => ({
-        ...data,
-        name,
-      })),
-      tap((data) => {
-        const updatedCache = [...this.etfCache$.value, data];
-        this.etfCache$.next(updatedCache); // Update the cache with the new ETF details
-      }),
-      catchError((error) => {
-        if (error.status === 404) {
-          const fallback = {
-            symbol: ticker,
-            open: 'N/A',
-            close: 'N/A',
-            percentageChange: 'N/A',
-            name,
-          };
-          this.etfCache$.next([...this.etfCache$.value, fallback]);
-          return of(fallback);
-        } else {
-          throw error;
-        }
-      })
-    );
+    return this.dataService
+      .getOpenClose(symbol, this.dateService.getYesterday())
+      .pipe(
+        map((data) => ({
+          ...data,
+          name,
+        })),
+        tap((data) => {
+          const updatedCache = [...this.etfCache$.value, data];
+          this.etfCache$.next(updatedCache); // Update the cache with the new ETF details
+        }),
+        catchError((error) => {
+          if (error.status === 404) {
+            const fallback = {
+              symbol: symbol,
+              open: 'N/A',
+              close: 'N/A',
+              percentageChange: 'N/A',
+              name,
+            };
+            this.etfCache$.next([...this.etfCache$.value, fallback]);
+            return of(fallback);
+          } else {
+            throw error;
+          }
+        })
+      );
   }
 
-  removeEtfFromWallet(ticker: string): Observable<void> {
-    this.removeFromWallet(ticker);
+  removeEtfFromWallet(symbol: string): Observable<void> {
+    this.removeFromWallet(symbol);
     const updatedCache = this.etfCache$.value.filter(
-      (etf) => etf.symbol !== ticker
+      (etf) => etf.symbol !== symbol
     );
     this.etfCache$.next(updatedCache); // Update the cache after removal
     return of();
   }
 
   private loadSavedEtfsDetails(): Observable<any[]> {
+    const yesterday: string = this.dateService.getYesterday();
     const requests = this.cacheLS.map((etf) =>
-      this.dataService.getOpenClose(etf.ticker, this.dateService.getYesterday()).pipe(
-        map((data) => ({
-          ...data,
-          name: etf.name,
-        })),
-        catchError((error) => {
-          if (error.status === 404) {
-            return of({
-              symbol: etf.ticker,
-              open: 'N/A',
-              close: 'N/A',
-              percentageChange: 'N/A',
-              name: etf.name,
-            });
-          } else {
-            throw error;
-          }
-        })
-      )
+      this.dataService
+        .getOpenClose(etf.symbol, yesterday)
+        .pipe(
+          map((data) => ({
+            ...data,
+            name: etf.name,
+          })),
+          catchError((error) => {
+            if (error.status === 404) {
+              return of({
+                symbol: etf.symbol,
+                open: 'N/A',
+                close: 'N/A',
+                percentageChange: 'N/A',
+                name: etf.name,
+                from: yesterday
+              });
+            } else {
+              throw error;
+            }
+          })
+        )
     );
 
     return forkJoin(requests).pipe(
@@ -133,20 +151,15 @@ export class WalletService {
   }
 
   private addToWallet(etf: etf): void {
-    const exists = this.cacheLS.some((item) => item.ticker === etf.ticker);
+    const exists = this.cacheLS.some((item) => item.symbol === etf.symbol);
     if (!exists) {
       this.cacheLS.push(etf);
       localStorage.setItem(this.storageKey, JSON.stringify(this.cacheLS));
     }
   }
 
-  private removeFromWallet(ticker: string): void {
-    this.cacheLS = this.cacheLS.filter((item) => item.ticker !== ticker);
+  private removeFromWallet(symbol: string): void {
+    this.cacheLS = this.cacheLS.filter((item) => item.symbol !== symbol);
     localStorage.setItem(this.storageKey, JSON.stringify(this.cacheLS));
-  }
-
-  private clearWallet(): void {
-    this.cacheLS = [];
-    localStorage.removeItem(this.storageKey);
   }
 }

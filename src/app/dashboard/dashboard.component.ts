@@ -1,10 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NgFor, NgIf, AsyncPipe, NgClass } from '@angular/common';
 import { WalletService } from '../wallet.service';
 import { Observable, of } from 'rxjs';
 import { RouterLink } from '@angular/router';
-import { DetailComponent } from '../detail/detail.component';
+import { DetailComponent } from './detail/detail.component';
+import { CursorService } from '../cursor.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -21,17 +22,14 @@ import { DetailComponent } from '../detail/detail.component';
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
 })
-export class DashboardComponent implements OnInit {
-  searchTerm: string = '';
+export class DashboardComponent{
+  public searchTerm: string = '';
   public resultSearch$: Observable<any>;
   public etfsInfoWallet$: Observable<any>;
+  public test: boolean = false;
 
-  constructor(private walletService: WalletService) {
+  constructor(public walletService: WalletService, private cursorService: CursorService) {
     this.resultSearch$ = of([]);
-    this.etfsInfoWallet$ = this.walletService.etfCache;
-  }
-
-  ngOnInit(): void {
     this.etfsInfoWallet$ = this.walletService.etfCache;
   }
 
@@ -49,17 +47,18 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  addEtfToWallet(name: string, ticker: string) {
+  addEtfToWallet(name: string, symbol: string) {
     this.resultSearch$ = of([]);
     this.searchTerm = '';
-    this.walletService.addEtfToWallet(name, ticker).subscribe(() => {
+    this.walletService.addEtfToWallet(name, symbol).subscribe(() => {
       this.etfsInfoWallet$ = this.walletService.etfCache;
     });
   }
 
-  removeEtfFromWallet(ticker: string) {
-    this.walletService.removeEtfFromWallet(ticker).subscribe(() => {
+  removeEtfFromWallet(symbol: string) {
+    this.walletService.removeEtfFromWallet(symbol).subscribe(() => {
       this.etfsInfoWallet$ = this.walletService.etfCache;
     });
   }
+
 }

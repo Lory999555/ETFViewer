@@ -1,10 +1,51 @@
 /* You can add global styles to this file, and also import other style files */
+body {
+  cursor: none;
+}
 
-$primary: #03DAC6;
+a,
+button,
+input,
+label {
+  cursor: none !important;
+}
 
+#cursor {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  width: 0.6rem;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  z-index: 2000;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  transition: width 0.2s, height 0.2s, border 0.2s;
+  &.clickable {
+    width: 1.2rem;
+    height: 1.2rem;
+    border: 3px solid white;
+    background-color: transparent;
+  }
+}
 
-@import '../node_modules/bootstrap/scss/bootstrap';
+#cursor-shadow {
+  aspect-ratio: 1;
+  border-radius: 32%;
+  width: 2rem;
+  position: fixed;
+  transform: translate(-50%, -50%);
+  border: 1px solid white;
+  z-index: 2000;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  transition: opacity 0.2s, width 0.2s;
+  &.clickable {
+    width: 0rem;
+    opacity: 0;
+  }
+}
 
+$primary: #03dac6;
 
-
-
+@import "../node_modules/bootstrap/scss/bootstrap";
