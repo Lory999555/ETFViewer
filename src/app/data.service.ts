@@ -8,7 +8,7 @@ import { DateService } from './date.service';
   providedIn: 'root',
 })
 export class DataService {
-  private baseUrl = '/api';
+  private baseUrl = 'https://api.polygon.io/api';
 
   constructor(private http: HttpClient, private dateService: DateService) {}
 
